@@ -1,15 +1,18 @@
 require('es6-promise').polyfill()
 require('isomorphic-fetch')
 
-const REPO_OWNER = 'jimmylv'
+const REPO_OWNER = 'quentin-chen'
 const REPO_NAME = 'reading'
-const REPO_ID = 91649130
+const REPO_ID = 118315108
+const REALEASE_ID = '5a645c582861b03f4025c06d'
 
 module.exports = (app) => {
   app.post('/reading', (req, res) => {
-      const { GITHUB_ACCESS_TOKEN, ZENHUB_ACCESS_TOKEN, ZENHUB_ACCESS_TOKEN_V4 } = req.webtaskContext.secrets
+      const { GITHUB_ACCESS_TOKEN, ZENHUB_ACCESS_TOKEN } = req.webtaskContext.secrets
       const { action, issue } = JSON.parse(req.body.payload)
       const { url, html_url, number } = issue
+      // var re = /(\w+):\/\/([^\:|\/]+)(\:\d*)?(.*\/)([^#|\?|\n]+)?(#.*)?(\?.*)?/i;
+      // const post_link = issue.body.match()
 
       console.info(`[BEGIN] issue updated with action: ${action}`)
 
@@ -31,10 +34,10 @@ module.exports = (app) => {
           () => console.info(`[END] Set estimate successful! ${html_url}`),
           (e) => console.error(`[END] Failed to set estimate! ${html_url}`, e),
         )
-        fetch(`https://api.zenhub.io/v4/reports/release/591dc19e81a6781f839705b9/items/issues?access_token=${ZENHUB_ACCESS_TOKEN_V4}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `add_issues%5B0%5D%5Bissue_number%5D=${number}&add_issues%5B0%5D%5Brepo_id%5D=${REPO_ID}`,
+        fetch(`https://api.zenhub.io/p1/reports/release/${REALEASE_ID}/issues?access_token=${ZENHUB_ACCESS_TOKEN}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({add_issues:[{repo_id: REPO_ID,issue_number: number}],remove_issues:[]}),
         }).then(
           () => console.info(`[END] set release successful! ${html_url}`),
           (e) => console.error(`[END] Failed to set release! ${html_url}`, e),
@@ -54,7 +57,7 @@ module.exports = (app) => {
     let keyword = encodeURIComponent(title.replace(/\s/g, '+'))
     console.info('[KEYWORD]', keyword)
 
-    fetch(`https://api.github.com/search/issues?q=${keyword}%20repo:jimmylv/reading`)
+    fetch(`https://api.github.com/search/issues?q=${keyword}%20repo:${REPO_OWNER}/${REPO_NAME}`)
       .then(response => response.json())
       .then(data => {
         console.info('[RESULT]', data)
@@ -104,7 +107,7 @@ module.exports = (app) => {
     let keyword = encodeURIComponent(title.replace(/\s/g, '+'))
     console.info('[KEYWORD]', keyword)
 
-    fetch(`https://api.github.com/search/issues?q=${keyword}%20repo:jimmylv/reading%20is:open`)
+    fetch(`https://api.github.com/search/issues?q=${keyword}%20repo:${REPO_OWNER}/${REPO_NAME}%20is:open`)
       .then(response => response.json())
       .then(data => {
         console.info('[RESULT]', data)
@@ -113,7 +116,7 @@ module.exports = (app) => {
             fetch(`${url}/comments?access_token=${GITHUB_ACCESS_TOKEN}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ body: `> ${note}` }),
+              body: JSON.stringify({ body: `${note}` }),
             })
               .then(() => console.info(`[END] added comment successful! ${html_url}`))
               .catch(err => res.json('error', { error: err })))
