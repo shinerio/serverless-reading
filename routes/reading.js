@@ -1,10 +1,10 @@
 require('es6-promise').polyfill()
 require('isomorphic-fetch')
 
-const REPO_OWNER = 'quentin-chen'
+const REPO_OWNER = 'shinerio'
 const REPO_NAME = 'reading'
-const REPO_ID = 118315108
-const REALEASE_ID = '5a645c582861b03f4025c06d'
+const REPO_ID = 118553442
+const REALEASE_ID = '5a66b202a410ff0b551d0cde'
 
 module.exports = (app) => {
   app.post('/reading', (req, res) => {
